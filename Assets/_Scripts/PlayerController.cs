@@ -21,9 +21,10 @@ public class PlayerController : MonoBehaviour
 	private float moveSpeed = 1;
 	public bool userInputEnabled = true;
 	public bool moveForwardsAutomatically = false;
+	public bool ableToFire = true;
 	public VerticalMovementState verticalMovementState = VerticalMovementState.forwardsBackwards;
 	void Update () {
-		if (Input.GetButton ("Fire1") && Time.time > nextFire && userInputEnabled) {
+		if (Input.GetButton ("Fire1") && Time.time > nextFire && userInputEnabled  && ableToFire) {
 			Instantiate (shot, shotSpawn.position, Quaternion.Euler(0.0f, 0.0f, 0.0f));
 			nextFire = Time.time + fireRate;
 			GetComponent<AudioSource>().Play ();

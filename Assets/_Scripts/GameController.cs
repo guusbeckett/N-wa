@@ -33,6 +33,10 @@ public class GameController : MonoBehaviour {
 	public Light lightSun;
 	private bool sunFadingIn;
 	private bool sunFadingOut;
+	public GameObject warningImage;
+	public GameObject warningText;
+	public GameObject hugeWarningText;
+	private bool displayWarning;
 	void Start() {
 		gameOver = false;
 		restart = false;
@@ -48,16 +52,24 @@ public class GameController : MonoBehaviour {
 		StartCoroutine(spawnWaves ());
 		usingScaler = false;
 		player.verticalMovementState = PlayerController.VerticalMovementState.forwardsBackwards;
+		displayWarning = false;
+		warningImage.SetActive (false);
+		warningText.SetActive (false);
+		hugeWarningText.SetActive (false);
 	}
 	void Update (){
 		if (restart && Input.GetKeyDown (KeyCode.R))
 			Application.LoadLevel (Application.loadedLevel);
-		if (waveCounter >= 5 && !isCameraMoving) {
+		if (waveCounter >= 10 && !isCameraMoving) {
 			mainCamera.GetComponent<Transform>().position = player.GetComponent<Rigidbody>().position  + cameraFPOffset;
 			mainCamera.GetComponent<Transform>().rotation = Quaternion.Euler(0.0f,0.0f,0);
 		}
 		if (Input.GetKeyDown (KeyCode.P)) {
-			waveCounter = 4;
+			waveCounter = 9;
+			hazardCount = 37;
+		}
+		if (Input.GetKeyDown (KeyCode.B) && hugeWarningText.activeSelf) {
+			hugeWarningText.SetActive(false);
 		}
 		if (isCameraMoving) {
 			float step = cameraTransitionSpeed * Time.deltaTime;
@@ -77,13 +89,19 @@ public class GameController : MonoBehaviour {
 		}
 		if (sunFadingIn) {
 			lightSun.GetComponent<Light>().intensity += 0.03f;
-			if(lightSun.GetComponent<Light>().intensity >= 7)
+			if(lightSun.GetComponent<Light>().intensity >= 7) {
 				sunFadingIn = false;
+				player.ableToFire = false;
+				hugeWarningText.SetActive(true);
+			}
 		}
 		if (sunFadingOut) {
 			lightSun.GetComponent<Light>().intensity -= 0.03f;
-			if(lightSun.GetComponent<Light>().intensity <= 2)
+			if(lightSun.GetComponent<Light>().intensity <= 2) {
 				sunFadingOut = false;
+				hugeWarningText.SetActive(false);
+				player.ableToFire = true;
+			}
 		}
 	}
 	IEnumerator spawnWaves () {
@@ -101,7 +119,7 @@ public class GameController : MonoBehaviour {
 					Instantiate (hazard, spawnPosition, spawnRotation);
 					yield return new WaitForSeconds (spawnWait);
 				}
-				hazardCount = hazardCount + hazardCount / 4;
+				hazardCount = hazardCount + hazardCount / 6;
 				spawnWait /= 1.2f;
 				yield return new WaitForSeconds (waveWait);
 				UpdateScore ();
@@ -114,7 +132,7 @@ public class GameController : MonoBehaviour {
 				}
 				waveCounter++;
 				UpdateScore();
-				if (waveCounter == 5) {
+				if (waveCounter == 10) {
 					isCameraMoving = true;
 					isSpawningSceneryWaves = true;
 					StartCoroutine(spawnSceneryWaves ());
@@ -126,10 +144,15 @@ public class GameController : MonoBehaviour {
 					usingScaler = true;
 					player.verticalMovementState = PlayerController.VerticalMovementState.none;
 				}
-				if (waveCounter == 6) {
+				if (waveCounter == 14) {
+					warningImage.SetActive (true);
+					warningText.SetActive (true);
+
 					sunFadingIn = true;
 				}
-				else if (waveCounter == 8) {
+				else if (waveCounter == 16) {
+					warningImage.SetActive (false);
+					warningText.SetActive (false);
 					sunFadingOut = true;
 				}
 
@@ -160,7 +183,7 @@ public class GameController : MonoBehaviour {
 			score = 0;
 		UpdateScore ();
 	}
-
+	
 	IEnumerator spawnSceneryWaves () {
 		float minSpawnY = spawnValues.y - 4;
 		float maxSpawnY = spawnValues.y - 10;
