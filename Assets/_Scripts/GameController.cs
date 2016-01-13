@@ -4,6 +4,7 @@ using System.Collections;
 public class GameController : MonoBehaviour {
 	public GameObject hazard;
 	public Vector3 spawnValues;
+	public float ZValue3D = 60f;
 	public int hazardCount;
 	public float spawnWait;
 	public float startWait;
@@ -27,6 +28,11 @@ public class GameController : MonoBehaviour {
 	private bool isCameraFirstPerson = false;
 	public float cameraTransitionSpeed;
 	private bool isSpawningSceneryWaves = false;
+	private bool usingScaler = false;
+	public Skybox skybox_3d;
+	public Light lightSun;
+	private bool sunFadingIn;
+	private bool sunFadingOut;
 	void Start() {
 		gameOver = false;
 		restart = false;
@@ -40,6 +46,8 @@ public class GameController : MonoBehaviour {
 		waveCounter = 1;
 		UpdateScore ();
 		StartCoroutine(spawnWaves ());
+		usingScaler = false;
+		player.verticalMovementState = PlayerController.VerticalMovementState.forwardsBackwards;
 	}
 	void Update (){
 		if (restart && Input.GetKeyDown (KeyCode.R))
@@ -47,6 +55,9 @@ public class GameController : MonoBehaviour {
 		if (waveCounter >= 5 && !isCameraMoving) {
 			mainCamera.GetComponent<Transform>().position = player.GetComponent<Rigidbody>().position  + cameraFPOffset;
 			mainCamera.GetComponent<Transform>().rotation = Quaternion.Euler(0.0f,0.0f,0);
+		}
+		if (Input.GetKeyDown (KeyCode.P)) {
+			waveCounter = 4;
 		}
 		if (isCameraMoving) {
 			float step = cameraTransitionSpeed * Time.deltaTime;
@@ -64,6 +75,16 @@ public class GameController : MonoBehaviour {
 				player.userInputEnabled = true;
 			}
 		}
+		if (sunFadingIn) {
+			lightSun.GetComponent<Light>().intensity += 0.03f;
+			if(lightSun.GetComponent<Light>().intensity >= 7)
+				sunFadingIn = false;
+		}
+		if (sunFadingOut) {
+			lightSun.GetComponent<Light>().intensity -= 0.03f;
+			if(lightSun.GetComponent<Light>().intensity <= 2)
+				sunFadingOut = false;
+		}
 	}
 	IEnumerator spawnWaves () {
 		yield return new WaitForSeconds (startWait);
@@ -74,6 +95,9 @@ public class GameController : MonoBehaviour {
 					Vector3 spawnPosition = new Vector3 (Random.Range (-spawnValues.x, spawnValues.x), spawnY, spawnValues.z);
 					Quaternion spawnRotation = Quaternion.identity; 
 					hazard.GetComponent<MoverAstroid>().speed *= speedIncrease;
+					if(!usingScaler) {
+						hazard.GetComponent<MoverAstroid>().scaler = new Vector3(1.0f,1.0f,1.0f);
+					}
 					Instantiate (hazard, spawnPosition, spawnRotation);
 					yield return new WaitForSeconds (spawnWait);
 				}
@@ -98,8 +122,17 @@ public class GameController : MonoBehaviour {
 					player.tilt = 1;
 					player.boundary.xMin = -20.0f;
 					spawnValues.x = player.boundary.xMax = 20.0f;
-					spawnValues.z = 34f;
+					spawnValues.z = ZValue3D;
+					usingScaler = true;
+					player.verticalMovementState = PlayerController.VerticalMovementState.none;
 				}
+				if (waveCounter == 6) {
+					sunFadingIn = true;
+				}
+				else if (waveCounter == 8) {
+					sunFadingOut = true;
+				}
+
 			}
 			else {
 				yield return new WaitForSeconds (5);
@@ -135,13 +168,13 @@ public class GameController : MonoBehaviour {
 		while (isSpawningSceneryWaves) {
 			for (int i = 0; i < hazardCount; i++) {
 				if (i % 2 == 0) 
-					spawnPosition = new Vector3 (Random.Range (-spawnValues.x, spawnValues.x), Random.Range(minSpawnY, maxSpawnY) , spawnValues.z);
+					spawnPosition = new Vector3 (Random.Range (-spawnValues.x-30, spawnValues.x+30), Random.Range(minSpawnY, maxSpawnY) , spawnValues.z);
 				else 
-					spawnPosition = new Vector3 (Random.Range (-spawnValues.x, spawnValues.x), Random.Range(-minSpawnY, -maxSpawnY) , spawnValues.z);
+					spawnPosition = new Vector3 (Random.Range (-spawnValues.x-30, spawnValues.x+30), Random.Range(-minSpawnY, -maxSpawnY) , spawnValues.z);
 				Quaternion spawnRotation = Quaternion.identity; 
 				hazard.GetComponent<MoverAstroid>().speed *= speedIncrease ;
 				Instantiate (hazard, spawnPosition, spawnRotation);
-				yield return new WaitForSeconds (0.04f);
+				yield return new WaitForSeconds (0.02f);
 			}
 		}
 	}

@@ -21,7 +21,7 @@ public class PlayerController : MonoBehaviour
 	private float moveSpeed = 1;
 	public bool userInputEnabled = true;
 	public bool moveForwardsAutomatically = false;
-
+	public VerticalMovementState verticalMovementState = VerticalMovementState.forwardsBackwards;
 	void Update () {
 		if (Input.GetButton ("Fire1") && Time.time > nextFire && userInputEnabled) {
 			Instantiate (shot, shotSpawn.position, Quaternion.Euler(0.0f, 0.0f, 0.0f));
@@ -44,17 +44,35 @@ public class PlayerController : MonoBehaviour
 		} else if (moveForwardsAutomatically) {
 			moveVertical = 0.3f;
 		}
-			Vector3 movement = new Vector3 (moveHorizontal, 0.0f, moveVertical);
-			GetComponent<Rigidbody> ().velocity = movement * speed * moveSpeed;
-		
-			GetComponent<Rigidbody> ().position = new Vector3 
-			(
-				Mathf.Clamp (GetComponent<Rigidbody> ().position.x, boundary.xMin, boundary.xMax), 
-				0.0f, 
-				Mathf.Clamp (GetComponent<Rigidbody> ().position.z, boundary.zMin, boundary.zMax)
-			);
-		
-			GetComponent<Rigidbody> ().rotation = Quaternion.Euler (0.0f, 0.0f, GetComponent<Rigidbody> ().velocity.x * -tilt);
+		Vector3 movement;
+			
+			switch (verticalMovementState) {
+				case VerticalMovementState.forwardsBackwards:
+					movement = new Vector3 (moveHorizontal, 0.0f, moveVertical);
+					break;
+				case VerticalMovementState.upDown:
+					movement = new Vector3 (moveHorizontal, moveVertical, 0.0f);
+					break;
+				case VerticalMovementState.none:
+					movement = new Vector3 (moveHorizontal, 0.0f, 0.0f);
+					break;
+				default:
+					movement = new Vector3 (0.0f, 0.0f, 0.0f);
+					break;
+			}
+
+		GetComponent<Rigidbody> ().velocity = movement * speed * moveSpeed;
+	
+		GetComponent<Rigidbody> ().position = new Vector3 
+		(
+			Mathf.Clamp (GetComponent<Rigidbody> ().position.x, boundary.xMin, boundary.xMax), 
+			0.0f, 
+			Mathf.Clamp (GetComponent<Rigidbody> ().position.z, boundary.zMin, boundary.zMax)
+		);
+	
+		GetComponent<Rigidbody> ().rotation = Quaternion.Euler (0.0f, 0.0f, GetComponent<Rigidbody> ().velocity.x * -tilt);
 
 	}
+
+	public enum VerticalMovementState {forwardsBackwards, upDown, none};
 }
