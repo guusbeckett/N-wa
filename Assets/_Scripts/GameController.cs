@@ -25,9 +25,10 @@ public class GameController : MonoBehaviour {
 	public PlayerController player;
 	public Vector3 cameraFPOffset;
 	private bool isCameraMoving = false;
-	private bool isCameraFirstPerson = false;
+	public bool isCameraFirstPerson = false;
 	public float cameraTransitionSpeed;
 	private bool isSpawningSceneryWaves = false;
+	private bool displayWarning = false;
 	private bool usingScaler = false;
 	public Skybox skybox_3d;
 	public Light lightSun;
@@ -36,7 +37,6 @@ public class GameController : MonoBehaviour {
 	public GameObject warningImage;
 	public GameObject warningText;
 	public GameObject hugeWarningText;
-	private bool displayWarning;
 	void Start() {
 		gameOver = false;
 		restart = false;
@@ -106,10 +106,14 @@ public class GameController : MonoBehaviour {
 	}
 	IEnumerator spawnWaves () {
 		yield return new WaitForSeconds (startWait);
-		float spawnY = spawnValues.y;
+		float spawnY = new float();
+		spawnY = spawnValues.y;
 		while (true) {
 			if (!isCameraMoving) {
 				for (int i = 0; i < hazardCount; i++) {
+					if (player.verticalMovementState == PlayerController.VerticalMovementState.upDown) {
+						spawnY = Random.Range (-6.5f, 6.5f);
+					}
 					Vector3 spawnPosition = new Vector3 (Random.Range (-spawnValues.x, spawnValues.x), spawnY, spawnValues.z);
 					Quaternion spawnRotation = Quaternion.identity; 
 					hazard.GetComponent<MoverAstroid>().speed *= speedIncrease;
@@ -121,6 +125,7 @@ public class GameController : MonoBehaviour {
 				}
 				hazardCount = hazardCount + hazardCount / 6;
 				spawnWait /= 1.2f;
+				hugeWarningText.SetActive (false);
 				yield return new WaitForSeconds (waveWait);
 				UpdateScore ();
 				if (gameOver)
@@ -135,22 +140,23 @@ public class GameController : MonoBehaviour {
 				if (waveCounter == 10) {
 					isCameraMoving = true;
 					isSpawningSceneryWaves = true;
-					StartCoroutine(spawnSceneryWaves ());
+//					StartCoroutine(spawnSceneryWaves ());
 					mainCamera.GetComponent<Camera>().orthographic = false;
 					player.tilt = 1;
 					player.boundary.xMin = -20.0f;
 					spawnValues.x = player.boundary.xMax = 20.0f;
 					spawnValues.z = ZValue3D;
 					usingScaler = true;
-					player.verticalMovementState = PlayerController.VerticalMovementState.none;
+					player.verticalMovementState = PlayerController.VerticalMovementState.upDown;
+					hazardCount = 300;
+					spawnWait = 0.03f;
 				}
-				if (waveCounter == 14) {
+				if (waveCounter == 14 || waveCounter == 24 || waveCounter == 34 || waveCounter ==  44) {
 					warningImage.SetActive (true);
 					warningText.SetActive (true);
-
 					sunFadingIn = true;
 				}
-				else if (waveCounter == 16) {
+				else if (waveCounter == 16 || waveCounter == 26 || waveCounter == 36 || waveCounter ==  46) {
 					warningImage.SetActive (false);
 					warningText.SetActive (false);
 					sunFadingOut = true;

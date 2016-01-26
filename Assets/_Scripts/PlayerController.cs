@@ -4,7 +4,7 @@ using System.Collections;
 [System.Serializable]
 public class Boundary
 {
-	public float xMin, xMax, zMin, zMax;
+	public float xMin, xMax, yMin, yMax, zMin, zMax;
 }
 
 public class PlayerController : MonoBehaviour
@@ -67,7 +67,7 @@ public class PlayerController : MonoBehaviour
 		GetComponent<Rigidbody> ().position = new Vector3 
 		(
 			Mathf.Clamp (GetComponent<Rigidbody> ().position.x, boundary.xMin, boundary.xMax), 
-			0.0f, 
+			Mathf.Clamp (GetComponent<Rigidbody> ().position.y, boundary.yMin, boundary.yMax), 
 			Mathf.Clamp (GetComponent<Rigidbody> ().position.z, boundary.zMin, boundary.zMax)
 		);
 	
